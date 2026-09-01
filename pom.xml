@@ -4,10 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+
     <groupId>com.agenda</groupId>
-    <artifactId>agenda-meta2</artifactId>
+    <artifactId>agenda-meta1-2</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Agenda Meta 2</name>
+    <name>Agenda Meta 1.2</name>
+
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,6 +17,7 @@
         <javafx.version>21.0.2</javafx.version>
         <junit.version>5.10.2</junit.version>
     </properties>
+
 
     <dependencies>
         <dependency>
@@ -40,6 +43,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
 
     <build>
         <plugins>
