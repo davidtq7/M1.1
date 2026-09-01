@@ -64,7 +64,7 @@ public class App extends Application {
 
         ejecutar(() -> recargarPersonas(null));
 
-        stage.setTitle("Agenda - Meta 2");
+        stage.setTitle("Agenda - Meta 1.2");
         stage.setScene(new Scene(root, 1050, 650));
         stage.setMinWidth(900);
         stage.setMinHeight(560);
