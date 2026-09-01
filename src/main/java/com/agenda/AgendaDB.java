@@ -1,24 +1,24 @@
 package com.agenda;
 
-import com.agenda.db.AgendaDAO;
-import com.agenda.db.DatabaseConfig;
+import com.agenda.config.AgendaFactory;
 import com.agenda.model.Direccion;
 import com.agenda.model.Persona;
 import com.agenda.model.Telefono;
+import com.agenda.service.AgendaUseCases;
 
 public final class AgendaDB {
     private AgendaDB() {
     }
 
     public static void main(String[] args) {
-        AgendaDAO dao = new AgendaDAO(DatabaseConfig::connect);
+        AgendaUseCases agenda = AgendaFactory.crearAgenda();
         try {
-            for (Persona persona : dao.listarPersonas()) {
+            for (Persona persona : agenda.listarPersonas()) {
                 System.out.println(persona.getId() + " - " + persona.getNombre());
-                for (Telefono telefono : dao.listarTelefonos(persona.getId())) {
+                for (Telefono telefono : agenda.listarTelefonos(persona.getId())) {
                     System.out.println("  Teléfono: " + telefono.getTelefono());
                 }
-                for (Direccion direccion : dao.listarDireccionesDePersona(persona.getId())) {
+                for (Direccion direccion : agenda.listarDireccionesDePersona(persona.getId())) {
                     System.out.println("  Dirección: " + direccion.getDireccion());
                 }
             }

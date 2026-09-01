@@ -1,11 +1,10 @@
 package com.agenda;
 
-import com.agenda.db.AgendaDAO;
-import com.agenda.db.DatabaseConfig;
+import com.agenda.config.AgendaFactory;
 import com.agenda.model.Direccion;
 import com.agenda.model.Persona;
 import com.agenda.model.Telefono;
-import com.agenda.service.ValidationService;
+import com.agenda.service.AgendaUseCases;
 import javafx.application.Application;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -34,7 +33,7 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 public class App extends Application {
-    private final AgendaDAO dao = new AgendaDAO(DatabaseConfig::connect);
+    private final AgendaUseCases agenda;
 
     private final TableView<Persona> tablaPersonas = new TableView<>();
     private final TableView<Telefono> tablaTelefonos = new TableView<>();
@@ -45,6 +44,14 @@ public class App extends Application {
     private final TextField txtTelefono = new TextField();
     private final TextField txtDireccion = new TextField();
     private final ComboBox<Direccion> cmbDireccionesExistentes = new ComboBox<>();
+
+    public App() {
+        this(AgendaFactory.crearAgenda());
+    }
+
+    public App(AgendaUseCases agenda) {
+        this.agenda = agenda;
+    }
 
     @Override
     public void start(Stage stage) {
@@ -64,7 +71,7 @@ public class App extends Application {
 
         ejecutar(() -> recargarPersonas(null));
 
-        stage.setTitle("Agenda - Meta 1.2");
+        stage.setTitle("Agenda - Meta 1.3");
         stage.setScene(new Scene(root, 1050, 650));
         stage.setMinWidth(900);
         stage.setMinHeight(560);
@@ -202,10 +209,7 @@ public class App extends Application {
 
     private void guardarPersona() {
         ejecutar(() -> {
-            String nombre = ValidationService.validarNombre(txtNombre.getText());
-            String telefono = txtTelefonoInicial.getText().isBlank()
-                    ? null : ValidationService.validarTelefono(txtTelefonoInicial.getText());
-            int id = dao.crearPersona(nombre, telefono);
+            int id = agenda.crearPersona(txtNombre.getText(), txtTelefonoInicial.getText());
             txtTelefonoInicial.clear();
             recargarPersonas(id);
             mostrarInformacion("Persona guardada correctamente.");
@@ -216,7 +220,7 @@ public class App extends Application {
         Persona persona = personaSeleccionada();
         if (persona == null) return;
         ejecutar(() -> {
-            dao.actualizarPersona(persona.getId(), ValidationService.validarNombre(txtNombre.getText()));
+            agenda.actualizarPersona(persona.getId(), txtNombre.getText());
             recargarPersonas(persona.getId());
         });
     }
@@ -231,7 +235,7 @@ public class App extends Application {
         Optional<ButtonType> resultado = confirmacion.showAndWait();
         if (resultado.isEmpty() || resultado.get() != ButtonType.YES) return;
         ejecutar(() -> {
-            dao.eliminarPersona(persona.getId());
+            agenda.eliminarPersona(persona.getId());
             limpiarSeleccion();
             recargarPersonas(null);
         });
@@ -241,7 +245,7 @@ public class App extends Application {
         Persona persona = personaSeleccionada();
         if (persona == null) return;
         ejecutar(() -> {
-            dao.agregarTelefono(persona.getId(), ValidationService.validarTelefono(txtTelefono.getText()));
+            agenda.agregarTelefono(persona.getId(), txtTelefono.getText());
             txtTelefono.clear();
             recargarDetalles(persona.getId());
         });
@@ -255,7 +259,7 @@ public class App extends Application {
             return;
         }
         ejecutar(() -> {
-            dao.actualizarTelefono(telefono.getId(), ValidationService.validarTelefono(txtTelefono.getText()));
+            agenda.actualizarTelefono(telefono.getId(), txtTelefono.getText());
             txtTelefono.clear();
             recargarDetalles(persona.getId());
         });
@@ -269,7 +273,7 @@ public class App extends Application {
             return;
         }
         ejecutar(() -> {
-            dao.eliminarTelefono(telefono.getId());
+            agenda.eliminarTelefono(telefono.getId());
             txtTelefono.clear();
             recargarDetalles(persona.getId());
         });
@@ -279,8 +283,7 @@ public class App extends Application {
         Persona persona = personaSeleccionada();
         if (persona == null) return;
         ejecutar(() -> {
-            dao.crearYAsociarDireccion(
-                    persona.getId(), ValidationService.validarDireccion(txtDireccion.getText()));
+            agenda.crearYAsociarDireccion(persona.getId(), txtDireccion.getText());
             txtDireccion.clear();
             recargarDetalles(persona.getId());
         });
@@ -294,7 +297,7 @@ public class App extends Application {
             return;
         }
         ejecutar(() -> {
-            dao.asociarDireccion(persona.getId(), direccion.getId());
+            agenda.asociarDireccion(persona.getId(), direccion.getId());
             cmbDireccionesExistentes.setValue(null);
             recargarDetalles(persona.getId());
         });
@@ -313,8 +316,7 @@ public class App extends Application {
         confirmacion.setHeaderText("Modificar dirección compartida");
         if (confirmacion.showAndWait().orElse(ButtonType.NO) != ButtonType.YES) return;
         ejecutar(() -> {
-            dao.actualizarDireccion(
-                    direccion.getId(), ValidationService.validarDireccion(txtDireccion.getText()));
+            agenda.actualizarDireccion(direccion.getId(), txtDireccion.getText());
             txtDireccion.clear();
             recargarDetalles(persona.getId());
         });
@@ -328,14 +330,14 @@ public class App extends Application {
             return;
         }
         ejecutar(() -> {
-            dao.desasociarDireccion(persona.getId(), direccion.getId());
+            agenda.desasociarDireccion(persona.getId(), direccion.getId());
             txtDireccion.clear();
             recargarDetalles(persona.getId());
         });
     }
 
     private void recargarPersonas(Integer seleccionarId) throws SQLException {
-        tablaPersonas.setItems(FXCollections.observableArrayList(dao.listarPersonas()));
+        tablaPersonas.setItems(FXCollections.observableArrayList(agenda.listarPersonas()));
         if (seleccionarId != null) {
             tablaPersonas.getItems().stream()
                     .filter(persona -> persona.getId() == seleccionarId)
@@ -344,10 +346,10 @@ public class App extends Application {
     }
 
     private void recargarDetalles(int personaId) throws SQLException {
-        tablaTelefonos.setItems(FXCollections.observableArrayList(dao.listarTelefonos(personaId)));
-        tablaDirecciones.setItems(FXCollections.observableArrayList(dao.listarDireccionesDePersona(personaId)));
+        tablaTelefonos.setItems(FXCollections.observableArrayList(agenda.listarTelefonos(personaId)));
+        tablaDirecciones.setItems(FXCollections.observableArrayList(agenda.listarDireccionesDePersona(personaId)));
         cmbDireccionesExistentes.setItems(
-                FXCollections.observableArrayList(dao.listarDireccionesNoAsociadas(personaId)));
+                FXCollections.observableArrayList(agenda.listarDireccionesNoAsociadas(personaId)));
     }
 
     private Persona personaSeleccionada() {
