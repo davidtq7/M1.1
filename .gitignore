@@ -1,9 +1,5 @@
 target/
 .maven-cache/
-.idea/
+work/
 .vscode/
-*.iml
 *.log
-.DS_Store
-database/*backup*.sql
-database/agenda_backup_antes_meta2.sql

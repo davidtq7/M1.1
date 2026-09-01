@@ -6,9 +6,9 @@
 
 
     <groupId>com.agenda</groupId>
-    <artifactId>agenda-meta1-2</artifactId>
+    <artifactId>agenda-meta1-3</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Agenda Meta 1.2</name>
+    <name>Agenda Meta 1.3</name>
 
 
     <properties>
